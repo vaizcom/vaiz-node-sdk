@@ -1,0 +1,54 @@
+{
+  "name": "vaiz-mcp-server",
+  "version": "0.1.0",
+  "description": "MCP Server for Vaiz API - enables AI assistants to interact with Vaiz project management platform",
+  "main": "dist/index.js",
+  "type": "module",
+  "bin": {
+    "vaiz-mcp-server": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc && chmod +x dist/index.js",
+    "dev": "tsc --watch",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "vaiz",
+    "api",
+    "sdk",
+    "project-management",
+    "ai",
+    "cursor",
+    "claude"
+  ],
+  "author": "Vaiz <mail@vaiz.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vaizcom/vaiz-node-sdk",
+    "directory": "mcp-server"
+  },
+  "bugs": {
+    "url": "https://github.com/vaizcom/vaiz-node-sdk/issues"
+  },
+  "homepage": "https://github.com/vaizcom/vaiz-node-sdk/tree/main/mcp-server#readme",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "vaiz-sdk": "file:..",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE"
+  ]
+}
