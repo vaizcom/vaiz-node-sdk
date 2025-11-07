@@ -388,7 +388,8 @@ const tools: Tool[] = [
         },
         content: {
           type: 'array',
-          description: 'Array of document nodes (heading, paragraph, taskList, etc.) in proper JSON structure',
+          description:
+            'Array of document nodes (heading, paragraph, taskList, etc.) in proper JSON structure',
           items: {
             type: 'object',
           },
