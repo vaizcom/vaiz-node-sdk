@@ -70,7 +70,7 @@ export interface EditDocumentResponse {
  */
 export interface ReplaceDocumentRequest {
   documentId: string;
-  content: string;
+  description: string;
 }
 
 /**

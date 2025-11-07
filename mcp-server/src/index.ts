@@ -357,6 +357,47 @@ const tools: Tool[] = [
     },
   },
   {
+    name: 'vaiz_replace_document',
+    description:
+      'Replace the entire content of an existing document. Supports both HTML and Markdown formats.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        documentId: {
+          type: 'string',
+          description: 'The document ID',
+        },
+        content: {
+          type: 'string',
+          description: 'HTML or Markdown content to replace with',
+        },
+      },
+      required: ['documentId', 'content'],
+    },
+  },
+  {
+    name: 'vaiz_replace_json_document',
+    description:
+      'Replace document content with JSON structure. Use this for creating interactive checklists, tables, and other rich content. Requires proper document node structure.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        documentId: {
+          type: 'string',
+          description: 'The document ID',
+        },
+        content: {
+          type: 'array',
+          description: 'Array of document nodes (heading, paragraph, taskList, etc.) in proper JSON structure',
+          items: {
+            type: 'object',
+          },
+        },
+      },
+      required: ['documentId', 'content'],
+    },
+  },
+  {
     name: 'vaiz_get_document_content',
     description:
       'Get the JSON content structure of a document. Works for task descriptions, standalone documents, and any document by ID. Returns the parsed JSON structure of the document content.',
@@ -516,6 +557,115 @@ const tools: Tool[] = [
     },
   },
   {
+    name: 'vaiz_create_board_group',
+    description:
+      'Create a new board group (column) on a board. Returns the created group information.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        name: {
+          type: 'string',
+          description: 'Name of the group (e.g., "To do", "In progress", "Done")',
+        },
+        boardId: {
+          type: 'string',
+          description: 'Board ID where the group will be created',
+        },
+        boardTypeIds: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Optional array of board type IDs to associate with this group',
+        },
+      },
+      required: ['name', 'boardId'],
+    },
+  },
+  {
+    name: 'vaiz_edit_board_group',
+    description:
+      'Edit an existing board group (column). Can update name and associated task types.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        groupId: {
+          type: 'string',
+          description: 'ID of the group to edit',
+        },
+        boardId: {
+          type: 'string',
+          description: 'Board ID',
+        },
+        name: {
+          type: 'string',
+          description: 'New name for the group',
+        },
+        boardTypeIds: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'New array of board type IDs to associate with this group',
+        },
+      },
+      required: ['groupId', 'boardId'],
+    },
+  },
+  {
+    name: 'vaiz_create_board_type',
+    description:
+      'Create a new board type (task type) on a board. Types define categories like Bug, Feature, etc.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        name: {
+          type: 'string',
+          description: 'Name of the type (e.g., "Bug", "Feature", "Task")',
+        },
+        boardId: {
+          type: 'string',
+          description: 'Board ID where the type will be created',
+        },
+        icon: {
+          type: 'string',
+          description: 'Icon for the type (optional)',
+        },
+        color: {
+          type: 'string',
+          description: 'Color for the type in hex format (e.g., "#FF5733") (optional)',
+        },
+      },
+      required: ['name', 'boardId'],
+    },
+  },
+  {
+    name: 'vaiz_edit_board_type',
+    description: 'Edit an existing board type (task type). Can update name, icon, and color.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        typeId: {
+          type: 'string',
+          description: 'ID of the type to edit',
+        },
+        boardId: {
+          type: 'string',
+          description: 'Board ID',
+        },
+        name: {
+          type: 'string',
+          description: 'New name for the type',
+        },
+        icon: {
+          type: 'string',
+          description: 'New icon for the type',
+        },
+        color: {
+          type: 'string',
+          description: 'New color for the type in hex format',
+        },
+      },
+      required: ['typeId', 'boardId'],
+    },
+  },
+  {
     name: 'vaiz_get_milestones',
     description: 'Get milestones for a specific project.',
     inputSchema: {
@@ -527,6 +677,49 @@ const tools: Tool[] = [
         },
       },
       required: ['projectId'],
+    },
+  },
+  {
+    name: 'vaiz_create_milestone',
+    description: 'Create a new milestone in a project.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        name: {
+          type: 'string',
+          description: 'Milestone name',
+        },
+        project: {
+          type: 'string',
+          description: 'Project ID',
+        },
+        board: {
+          type: 'string',
+          description: 'Board ID',
+        },
+        dueStart: {
+          type: 'string',
+          description: 'Start date in ISO format (e.g., "2025-01-01T00:00:00Z")',
+        },
+        dueEnd: {
+          type: 'string',
+          description: 'Due date in ISO format (e.g., "2025-12-31T23:59:59Z")',
+        },
+        description: {
+          type: 'string',
+          description: 'Milestone description (optional)',
+        },
+        color: {
+          type: 'string',
+          description: 'Color name (default: "blue")',
+        },
+        tags: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Tags for the milestone',
+        },
+      },
+      required: ['name', 'project', 'board'],
     },
   },
 ];
@@ -734,6 +927,42 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
       }
 
+      case 'vaiz_replace_document': {
+        if (!args?.documentId || !args?.content) {
+          throw new Error('documentId and content are required');
+        }
+        const result = await vaizClient.replaceDocument({
+          documentId: args.documentId as string,
+          description: args.content as string,
+        });
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result, null, 2),
+            },
+          ],
+        };
+      }
+
+      case 'vaiz_replace_json_document': {
+        if (!args?.documentId || !args?.content) {
+          throw new Error('documentId and content are required');
+        }
+        const result = await vaizClient.replaceJsonDocument({
+          documentId: args.documentId as string,
+          content: args.content as any[],
+        });
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result, null, 2),
+            },
+          ],
+        };
+      }
+
       case 'vaiz_get_document_content': {
         if (!args?.documentId) {
           throw new Error('documentId is required');
@@ -757,15 +986,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           documentId: args.documentId as string,
           content: args.content as string,
         };
-        
+
         if (args.fileIds) {
           commentRequest.fileIds = args.fileIds as string[];
         }
-        
+
         if (args.replyTo) {
           commentRequest.replyTo = args.replyTo as string;
         }
-        
+
         const result = await vaizClient.postComment(commentRequest);
         return {
           content: [
@@ -899,11 +1128,115 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
       }
 
+      case 'vaiz_create_board_group': {
+        if (!args?.name || !args?.boardId) {
+          throw new Error('name and boardId are required');
+        }
+        const result = await vaizClient.createBoardGroup({
+          name: args.name as string,
+          boardId: args.boardId as string,
+          boardTypeIds: args.boardTypeIds as string[] | undefined,
+        });
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result, null, 2),
+            },
+          ],
+        };
+      }
+
+      case 'vaiz_edit_board_group': {
+        if (!args?.groupId || !args?.boardId) {
+          throw new Error('groupId and boardId are required');
+        }
+        const result = await vaizClient.editBoardGroup({
+          groupId: args.groupId as string,
+          boardId: args.boardId as string,
+          name: args.name as string | undefined,
+          boardTypeIds: args.boardTypeIds as string[] | undefined,
+        });
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result, null, 2),
+            },
+          ],
+        };
+      }
+
+      case 'vaiz_create_board_type': {
+        if (!args?.name || !args?.boardId) {
+          throw new Error('name and boardId are required');
+        }
+        const result = await vaizClient.createBoardType({
+          name: args.name as string,
+          boardId: args.boardId as string,
+          icon: args.icon as string | undefined,
+          color: args.color as string | undefined,
+        });
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result, null, 2),
+            },
+          ],
+        };
+      }
+
+      case 'vaiz_edit_board_type': {
+        if (!args?.typeId || !args?.boardId) {
+          throw new Error('typeId and boardId are required');
+        }
+        const result = await vaizClient.editBoardType({
+          typeId: args.typeId as string,
+          boardId: args.boardId as string,
+          name: args.name as string | undefined,
+          icon: args.icon as string | undefined,
+          color: args.color as string | undefined,
+        });
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result, null, 2),
+            },
+          ],
+        };
+      }
+
       case 'vaiz_get_milestones': {
         if (!args?.projectId) {
           throw new Error('projectId is required');
         }
         const result = await vaizClient.getMilestones(args.projectId as string);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result, null, 2),
+            },
+          ],
+        };
+      }
+
+      case 'vaiz_create_milestone': {
+        if (!args?.name || !args?.project || !args?.board) {
+          throw new Error('name, project, and board are required');
+        }
+        const result = await vaizClient.createMilestone({
+          name: args.name as string,
+          project: args.project as string,
+          board: args.board as string,
+          dueStart: args.dueStart as string | undefined,
+          dueEnd: args.dueEnd as string | undefined,
+          description: args.description as string | undefined,
+          color: args.color as string | undefined,
+          tags: args.tags as string[] | undefined,
+        } as any);
         return {
           content: [
             {

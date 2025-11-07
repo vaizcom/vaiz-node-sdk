@@ -182,6 +182,10 @@ The server provides the following tools:
 - **vaiz_get_document_content** - Get the JSON content structure of a document (works for task descriptions too)
 - **vaiz_create_document** - Create a new document
 - **vaiz_append_to_document** - Append content to an existing document
+- **vaiz_replace_document** - Replace document content with HTML/Markdown
+- **vaiz_replace_json_document** - Replace document content with structured JSON (for interactive checklists, tables, etc.)
+
+> **📖 Document Content Examples**: See [MCP_DOCUMENT_EXAMPLES.md](../MCP_DOCUMENT_EXAMPLES.md) for detailed examples of document structures and how to create interactive checklists.
 
 ### Comments
 - **vaiz_post_comment** - Post a comment on a task, document, etc.

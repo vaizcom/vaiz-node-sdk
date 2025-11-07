@@ -31,9 +31,13 @@ export interface MilestonesResponse {
  */
 export interface CreateMilestoneRequest {
   name: string;
-  projectId: string;
+  board: string;
+  project: string;
   description?: string;
-  dueDate?: string;
+  dueStart?: string;
+  dueEnd?: string;
+  tags?: string[];
+  color?: string;
 }
 
 /**
