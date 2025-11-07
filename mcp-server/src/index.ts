@@ -780,13 +780,27 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (!args?.name || !args?.board) {
           throw new Error('name and board are required');
         }
+
+        // Convert string priority to number
+        let priorityNum: number | undefined;
+        if (args.priority) {
+          const priorityMap: Record<string, number> = {
+            low: 0,
+            normal: 1,
+            medium: 2,
+            high: 3,
+            urgent: 3,
+          };
+          priorityNum = priorityMap[args.priority as string] ?? 1;
+        }
+
         const result = await vaizClient.createTask({
           name: args.name as string,
           board: args.board as string,
           group: args.group as string | undefined,
           project: args.project as string | undefined,
           description: args.description as string | undefined,
-          priority: args.priority as any,
+          priority: priorityNum as any,
           completed: args.completed as boolean | undefined,
           assignees: args.assignees as string[] | undefined,
           types: args.types as string[] | undefined,
@@ -812,11 +826,25 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (!args?.taskId) {
           throw new Error('taskId is required');
         }
+
+        // Convert string priority to number
+        let priorityNum: number | undefined;
+        if (args.priority) {
+          const priorityMap: Record<string, number> = {
+            low: 0,
+            normal: 1,
+            medium: 2,
+            high: 3,
+            urgent: 3,
+          };
+          priorityNum = priorityMap[args.priority as string] ?? undefined;
+        }
+
         const result = await vaizClient.editTask({
           taskId: args.taskId as string,
           name: args.name as string | undefined,
           description: args.description as string | undefined,
-          priority: args.priority as any,
+          priority: priorityNum as any,
           completed: args.completed as boolean | undefined,
           assignees: args.assignees as string[] | undefined,
           types: args.types as string[] | undefined,
