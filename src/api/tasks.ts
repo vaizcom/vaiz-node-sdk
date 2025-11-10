@@ -9,6 +9,8 @@ import {
   GetTasksRequest,
   GetTasksResponse,
   TaskFile,
+  SetTaskBlockerRequest,
+  SetTaskBlockerResponse,
 } from '../models';
 import { existsSync } from 'fs';
 import * as crypto from 'crypto';
@@ -184,6 +186,52 @@ export class TasksAPIClient extends BaseAPIClient {
     }
 
     return response;
+  }
+
+  /**
+   * Set a blocking relationship between two tasks
+   * This method will:
+   * 1. Add the blocker to the blocked task's leftConnectors (tasks that block it)
+   * 2. Add the blocked task to the blocker's rightConnectors (tasks it blocks)
+   * 
+   * @param request - Contains blockedTaskId (the task being blocked) and blockerTaskId (the task that blocks)
+   * @returns Both updated tasks
+   */
+  async setTaskBlocker(request: SetTaskBlockerRequest): Promise<SetTaskBlockerResponse> {
+    const { blockedTaskId, blockerTaskId } = request;
+
+    // Get both tasks to retrieve their current blockers/blocking lists
+    const [blockedTask, blockerTask] = await Promise.all([
+      this.getTask(blockedTaskId),
+      this.getTask(blockerTaskId),
+    ]);
+
+    // Prepare the leftConnectors for the blocked task
+    // Get current leftConnectors from the API response
+    const currentBlockers = (blockedTask.task as any).leftConnectors || [];
+    const newBlockers = [...new Set([...currentBlockers, blockerTaskId])];
+
+    // Prepare the rightConnectors for the blocker task
+    // Get current rightConnectors from the API response
+    const currentBlocking = (blockerTask.task as any).rightConnectors || [];
+    const newBlocking = [...new Set([...currentBlocking, blockedTaskId])];
+
+    // Update both tasks
+    const [updatedBlockedTask, updatedBlockerTask] = await Promise.all([
+      this.editTask({
+        taskId: blockedTaskId,
+        blockers: newBlockers,
+      }),
+      this.editTask({
+        taskId: blockerTaskId,
+        blocking: newBlocking,
+      }),
+    ]);
+
+    return {
+      blockedTask: updatedBlockedTask.task,
+      blockerTask: updatedBlockerTask.task,
+    };
   }
 }
 

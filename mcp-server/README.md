@@ -169,6 +169,7 @@ The server provides the following tools:
 - **vaiz_get_task** - Get detailed information about a specific task
 - **vaiz_create_task** - Create a new task
 - **vaiz_edit_task** - Update an existing task
+- **vaiz_set_task_blocker** - Set a blocking relationship between two tasks
 
 ### Projects & Boards
 - **vaiz_get_projects** - Get all projects in the workspace
@@ -233,6 +234,12 @@ The AI will:
 > **You**: "Mark TASK-456 as completed"
 
 The AI will use `vaiz_edit_task` to update the task status.
+
+### Example 2.5: Set up task blocking relationships
+
+> **You**: "Make TASK-123 block TASK-456"
+
+The AI will use `vaiz_set_task_blocker` to create a blocking relationship where TASK-123 blocks TASK-456. This means TASK-456 cannot be completed until TASK-123 is done.
 
 ### Example 3: Document collaboration
 

@@ -233,6 +233,27 @@ const tools: Tool[] = [
     },
   },
   {
+    name: 'vaiz_set_task_blocker',
+    description:
+      "Set a blocking relationship between two tasks. This will add the blocker to the blocked task's blockers list and add the blocked task to the blocker's blocking list. Both tasks will be updated atomically.",
+    inputSchema: {
+      type: 'object',
+      properties: {
+        blockedTaskId: {
+          type: 'string',
+          description:
+            "The ID of the task that is being blocked (can use HRID like 'TASK-123' or database ID)",
+        },
+        blockerTaskId: {
+          type: 'string',
+          description:
+            "The ID of the task that blocks the other task (can use HRID like 'TASK-456' or database ID)",
+        },
+      },
+      required: ['blockedTaskId', 'blockerTaskId'],
+    },
+  },
+  {
     name: 'vaiz_edit_task',
     description:
       'Edit an existing task. Can update name, description, priority, assignees, completion status, and other fields. Only provide fields you want to update.',
@@ -954,6 +975,26 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           blockers: leftConnectors,
           blocking: rightConnectors,
         });
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result, null, 2),
+            },
+          ],
+        };
+      }
+
+      case 'vaiz_set_task_blocker': {
+        if (!args?.blockedTaskId || !args?.blockerTaskId) {
+          throw new Error('blockedTaskId and blockerTaskId are required');
+        }
+
+        const result = await vaizClient.setTaskBlocker({
+          blockedTaskId: args.blockedTaskId as string,
+          blockerTaskId: args.blockerTaskId as string,
+        });
+
         return {
           content: [
             {

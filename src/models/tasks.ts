@@ -162,3 +162,26 @@ export interface GetHistoryResponse {
   histories: HistoryItem[];
   total: number;
 }
+
+/**
+ * Set task blocker request
+ * This will set up a blocking relationship between two tasks:
+ * - The blocked task will have the blocker in its leftConnectors
+ * - The blocker task will have the blocked task in its rightConnectors
+ */
+export interface SetTaskBlockerRequest {
+  /** ID of the task that is being blocked */
+  blockedTaskId: string;
+  /** ID of the task that blocks the other task */
+  blockerTaskId: string;
+}
+
+/**
+ * Set task blocker response
+ */
+export interface SetTaskBlockerResponse {
+  /** The updated blocked task */
+  blockedTask: Task;
+  /** The updated blocker task */
+  blockerTask: Task;
+}

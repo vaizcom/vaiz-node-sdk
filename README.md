@@ -104,6 +104,15 @@ const tasks = await client.getTasks({
   limit: 50,
   skip: 0,  // Use 'skip' instead of 'offset'
 });
+
+// Set a blocking relationship between tasks
+// Task 'TASK-123' blocks task 'TASK-456'
+const blockerResult = await client.setTaskBlocker({
+  blockedTaskId: 'TASK-456',  // The task being blocked
+  blockerTaskId: 'TASK-123',  // The task that blocks
+});
+console.log('Blocked task:', blockerResult.blockedTask);
+console.log('Blocker task:', blockerResult.blockerTask);
 ```
 
 ### Documents
