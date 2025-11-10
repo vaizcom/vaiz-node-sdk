@@ -14,12 +14,13 @@ This MCP server provides AI assistants with direct access to the [Vaiz](https://
 - 💬 Post and read comments
 - 📊 Access projects, boards, and milestones
 - 👥 View team members and profiles
+- 🖼️ Download and analyze images from tasks and attachments
 
 Built on the [Model Context Protocol](https://modelcontextprotocol.io/), this server works with any MCP-compatible AI assistant, including Claude Desktop, Cursor, and more.
 
 ## Features
 
-- ✅ **29 powerful tools** for complete Vaiz API access
+- ✅ **30 powerful tools** for complete Vaiz API access
 - ✅ **Full TypeScript support** with type safety
 - ✅ **Simple setup** with environment variables
 - ✅ **Works with Cursor, Claude Desktop**, and other MCP clients
@@ -208,6 +209,9 @@ The server provides the following tools:
 - **vaiz_get_space** - Get information about a specific space
 - **vaiz_get_space_members** - Get all members in the current space
 
+### Files & Images
+- **vaiz_download_image** - Download an image from URL and return it for analysis. The image is automatically downloaded, returned as base64, and the temporary file is automatically deleted. Perfect for analyzing task attachments, screenshots, and external images.
+
 ## Important Notes
 
 ### ⚠️ Using Member IDs for Task Assignees
@@ -258,6 +262,17 @@ The AI will use `vaiz_set_task_blocker` to create a blocking relationship where 
 > **You**: "Create a document called 'API Documentation' and add a section about authentication"
 
 The AI will use `vaiz_create_document` and `vaiz_append_to_document`.
+
+### Example 4: Analyze task attachments
+
+> **You**: "Download the image from TASK-123 and analyze what's in the screenshot"
+
+The AI will:
+1. Use `vaiz_get_task` to get the task details and file attachments
+2. Use `vaiz_download_image` to download the image (it will be automatically returned as base64 and the temporary file will be automatically deleted)
+3. Analyze the image to describe its contents
+
+**Note**: The MCP server automatically handles temporary file cleanup - images are downloaded, converted to base64, returned for analysis, and then the temporary files are immediately deleted.
 
 ## Troubleshooting
 

@@ -19,4 +19,3 @@ export interface UploadedFile {
 export interface UploadFileResponse {
   file: UploadedFile;
 }
-

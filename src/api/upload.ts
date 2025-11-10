@@ -52,4 +52,36 @@ export class UploadAPIClient extends BaseAPIClient {
       throw new Error(`Failed to upload file from URL: ${error.message}`);
     }
   }
+
+  /**
+   * Download an image from URL to local path for analysis
+   * @param imageUrl - URL of the image to download
+   * @param localPath - Local path where to save the image
+   * @returns Path to the downloaded image
+   */
+  async downloadImage(imageUrl: string, localPath: string): Promise<string> {
+    try {
+      // Check if URL is from Vaiz (needs authentication)
+      const isVaizUrl = imageUrl.includes('vaiz.com');
+
+      const response = await axios.get(imageUrl, {
+        responseType: 'stream',
+        headers: {
+          Accept: 'image/*',
+          // Add authentication headers if it's a Vaiz URL
+          ...(isVaizUrl && {
+            Authorization: `Bearer ${this.apiKey}`,
+            'current-space-id': this.spaceId,
+          }),
+        },
+      });
+
+      const writer = createWriteStream(localPath);
+      await pipeline(response.data, writer);
+
+      return localPath;
+    } catch (error: any) {
+      throw new Error(`Failed to download image: ${error.message}`);
+    }
+  }
 }

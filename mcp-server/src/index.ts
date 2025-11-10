@@ -844,6 +844,26 @@ const tools: Tool[] = [
       required: ['name', 'project', 'board'],
     },
   },
+  {
+    name: 'vaiz_download_image',
+    description:
+      'Download an image from URL and return it for analysis. The image is automatically downloaded, converted to base64, returned for analysis, and the temporary file is automatically deleted. This allows you to analyze images from Vaiz (e.g., task attachments, comment attachments) or any external URL.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        imageUrl: {
+          type: 'string',
+          description: 'URL of the image to download and analyze',
+        },
+        localPath: {
+          type: 'string',
+          description:
+            'Optional: Custom temporary path where to save the image before analysis (default: /tmp/vaiz-image-{timestamp}.png). The file will be automatically deleted after analysis.',
+        },
+      },
+      required: ['imageUrl'],
+    },
+  },
 ];
 
 // Create MCP server
@@ -1491,6 +1511,72 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             },
           ],
         };
+      }
+
+      case 'vaiz_download_image': {
+        if (!args?.imageUrl) {
+          throw new Error('imageUrl is required');
+        }
+
+        // Create temporary path
+        const tempPath: string =
+          (args.localPath as string | undefined) || `/tmp/vaiz-image-${Date.now()}.png`;
+
+        try {
+          // Download the image
+          await vaizClient.downloadImage(args.imageUrl as string, tempPath);
+
+          // Read the image file
+          const fs = await import('fs/promises');
+          const imageData = await fs.readFile(tempPath);
+          const base64Image = imageData.toString('base64');
+
+          // Determine mime type from URL or file extension
+          const ext = tempPath.split('.').pop()?.toLowerCase();
+          const mimeTypes: Record<string, string> = {
+            png: 'image/png',
+            jpg: 'image/jpeg',
+            jpeg: 'image/jpeg',
+            gif: 'image/gif',
+            webp: 'image/webp',
+            bmp: 'image/bmp',
+          };
+          const mimeType = mimeTypes[ext || 'png'] || 'image/png';
+
+          // Clean up the temporary file
+          await fs.unlink(tempPath);
+
+          return {
+            content: [
+              {
+                type: 'image',
+                data: base64Image,
+                mimeType: mimeType,
+              },
+              {
+                type: 'text',
+                text: JSON.stringify(
+                  {
+                    success: true,
+                    message: 'Image downloaded and ready for analysis',
+                    url: args.imageUrl,
+                  },
+                  null,
+                  2
+                ),
+              },
+            ],
+          };
+        } catch (error) {
+          // Try to clean up temp file on error
+          try {
+            const fs = await import('fs/promises');
+            await fs.unlink(tempPath);
+          } catch {
+            // Ignore cleanup errors
+          }
+          throw error;
+        }
       }
 
       default:
