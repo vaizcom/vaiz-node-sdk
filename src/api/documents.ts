@@ -15,6 +15,8 @@ import {
   AppendDocumentResponse,
   AppendJSONDocumentRequest,
   AppendJSONDocumentResponse,
+  GetDocumentHistoryRequest,
+  GetDocumentHistoryResponse,
 } from '../models';
 
 /**
@@ -140,5 +142,18 @@ export class DocumentsAPIClient extends BaseAPIClient {
 
     // Fallback for other possible structures
     return response.payload?.content || response.content || [];
+  }
+
+  /**
+   * Get history for a specific document
+   */
+  async getDocumentHistory(request: GetDocumentHistoryRequest): Promise<GetDocumentHistoryResponse> {
+    const response = await this.makeRequest<GetDocumentHistoryResponse>('getHistory', 'POST', {
+      kind: 'Document',
+      kindId: request.documentId,
+      limit: request.limit,
+      offset: request.offset,
+    });
+    return response;
   }
 }

@@ -164,6 +164,23 @@ export interface GetHistoryResponse {
 }
 
 /**
+ * Get task history request
+ */
+export interface GetTaskHistoryRequest {
+  taskId: string;
+  limit?: number;
+  offset?: number;
+}
+
+/**
+ * Get task history response
+ */
+export interface GetTaskHistoryResponse {
+  histories: HistoryItem[];
+  total: number;
+}
+
+/**
  * Set task blocker request
  * This will set up a blocking relationship between two tasks:
  * - The blocked task will have the blocker in its leftConnectors

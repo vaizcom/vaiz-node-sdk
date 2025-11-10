@@ -20,7 +20,7 @@ Built on the [Model Context Protocol](https://modelcontextprotocol.io/), this se
 
 ## Features
 
-- ✅ **30 powerful tools** for complete Vaiz API access
+- ✅ **35+ powerful tools** for complete Vaiz API access
 - ✅ **10 built-in documentation resources** for AI self-learning
 - ✅ **Full TypeScript support** with type safety
 - ✅ **Simple setup** with environment variables
@@ -171,9 +171,17 @@ The server provides the following tools:
 - **clear_tasks_cache** - Clear the tasks cache to force refresh task data
 - **get_task** - Get detailed information about a specific task
 - **create_task** - Create a new task
-- **get_history** - Get history of changes for a task or other entity
 - **set_task_blocker** - Set a blocking relationship between two tasks
 - **edit_task** - Update an existing task
+
+### History
+- **get_task_history** - Get history of changes for a specific task
+- **get_document_history** - Get history of changes for a specific document
+- **get_project_history** - Get history of changes for a specific project
+- **get_milestone_history** - Get history of changes for a specific milestone
+- **get_member_history** - Get history of changes for a specific member
+- **get_space_history** - Get history of changes for a specific space
+- ~~**get_history**~~ - (Deprecated: Use specific history methods above instead)
 
 ### Projects & Boards
 - **get_projects** - Get all projects in the workspace

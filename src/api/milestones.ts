@@ -8,6 +8,8 @@ import {
   EditMilestoneResponse,
   ToggleMilestoneRequest,
   ToggleMilestoneResponse,
+  GetMilestoneHistoryRequest,
+  GetMilestoneHistoryResponse,
 } from '../models';
 
 /**
@@ -52,6 +54,19 @@ export class MilestonesAPIClient extends BaseAPIClient {
    */
   async toggleMilestone(request: ToggleMilestoneRequest): Promise<ToggleMilestoneResponse> {
     const response = await this.makeRequest<ToggleMilestoneResponse>('toggleMilestone', 'POST', request);
+    return response;
+  }
+
+  /**
+   * Get history for a specific milestone
+   */
+  async getMilestoneHistory(request: GetMilestoneHistoryRequest): Promise<GetMilestoneHistoryResponse> {
+    const response = await this.makeRequest<GetMilestoneHistoryResponse>('getHistory', 'POST', {
+      kind: 'Milestone',
+      kindId: request.milestoneId,
+      limit: request.limit,
+      offset: request.offset,
+    });
     return response;
   }
 }

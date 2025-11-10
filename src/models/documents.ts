@@ -139,3 +139,27 @@ export interface GetJSONDocumentRequest {
 export interface GetJSONDocumentResponse {
   content: any[];
 }
+
+/**
+ * Get document history request
+ */
+export interface GetDocumentHistoryRequest {
+  documentId: string;
+  limit?: number;
+  offset?: number;
+}
+
+/**
+ * Get document history response
+ */
+export interface GetDocumentHistoryResponse {
+  histories: Array<{
+    id: string;
+    kind: Kind;
+    action: string;
+    userId: string;
+    createdAt: string;
+    changes?: Record<string, any>;
+  }>;
+  total: number;
+}

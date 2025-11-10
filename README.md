@@ -115,6 +115,50 @@ console.log('Blocked task:', blockerResult.blockedTask);
 console.log('Blocker task:', blockerResult.blockerTask);
 ```
 
+### History
+
+Get change history for any entity with specialized methods:
+
+```typescript
+// Get task history
+const taskHistory = await client.getTaskHistory({
+  taskId: 'TASK-123',
+  limit: 50,
+  offset: 0,
+});
+console.log('Task changes:', taskHistory.histories);
+
+// Get document history
+const docHistory = await client.getDocumentHistory({
+  documentId: 'doc-id',
+  limit: 20,
+});
+
+// Get project history
+const projectHistory = await client.getProjectHistory({
+  projectId: 'project-id',
+});
+
+// Get milestone history
+const milestoneHistory = await client.getMilestoneHistory({
+  milestoneId: 'milestone-id',
+});
+
+// Get member history
+const memberHistory = await client.getMemberHistory({
+  memberId: 'member-id',
+});
+
+// Get space history
+const spaceHistory = await client.getSpaceHistory({
+  spaceId: 'space-id',
+});
+```
+
+Each history response includes:
+- `histories`: Array of history items with `id`, `kind`, `action`, `userId`, `createdAt`, and `changes`
+- `total`: Total number of history entries
+
 ### Documents
 
 ```typescript

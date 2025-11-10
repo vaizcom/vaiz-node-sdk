@@ -211,7 +211,7 @@ const tools: Tool[] = [
   {
     name: 'get_history',
     description:
-      'Get history of changes for a task or other entity. Returns a list of all changes made to the entity. Each history entry contains creatorId field - use get_space_members to get member details and display the author name (member.fullName) for each change. Always include the author information when presenting history to the user.',
+      'DEPRECATED: Use get_task_history, get_document_history, etc. instead. Get history of changes for a task or other entity. Returns a list of all changes made to the entity. Each history entry contains creatorId field - use get_space_members to get member details and display the author name (member.fullName) for each change. Always include the author information when presenting history to the user.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -233,6 +233,144 @@ const tools: Tool[] = [
         },
       },
       required: ['kind', 'kindId'],
+    },
+  },
+  {
+    name: 'get_task_history',
+    description:
+      'Get history of changes for a specific task. Returns a list of all changes made to the task. Each history entry contains creatorId field - use get_space_members to get member details and display the author name (member.fullName) for each change. Always include the author information when presenting history to the user.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        taskId: {
+          type: 'string',
+          description: 'Task ID or slug (e.g., "TASK-123")',
+        },
+        limit: {
+          type: 'number',
+          description: 'Maximum number of history entries to return (optional)',
+        },
+        offset: {
+          type: 'number',
+          description: 'Number of entries to skip (optional)',
+        },
+      },
+      required: ['taskId'],
+    },
+  },
+  {
+    name: 'get_document_history',
+    description:
+      'Get history of changes for a specific document. Returns a list of all changes made to the document. Each history entry contains creatorId field - use get_space_members to get member details and display the author name (member.fullName) for each change. Always include the author information when presenting history to the user.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        documentId: {
+          type: 'string',
+          description: 'Document ID',
+        },
+        limit: {
+          type: 'number',
+          description: 'Maximum number of history entries to return (optional)',
+        },
+        offset: {
+          type: 'number',
+          description: 'Number of entries to skip (optional)',
+        },
+      },
+      required: ['documentId'],
+    },
+  },
+  {
+    name: 'get_project_history',
+    description:
+      'Get history of changes for a specific project. Returns a list of all changes made to the project. Each history entry contains creatorId field - use get_space_members to get member details and display the author name (member.fullName) for each change. Always include the author information when presenting history to the user.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectId: {
+          type: 'string',
+          description: 'Project ID',
+        },
+        limit: {
+          type: 'number',
+          description: 'Maximum number of history entries to return (optional)',
+        },
+        offset: {
+          type: 'number',
+          description: 'Number of entries to skip (optional)',
+        },
+      },
+      required: ['projectId'],
+    },
+  },
+  {
+    name: 'get_milestone_history',
+    description:
+      'Get history of changes for a specific milestone. Returns a list of all changes made to the milestone. Each history entry contains creatorId field - use get_space_members to get member details and display the author name (member.fullName) for each change. Always include the author information when presenting history to the user.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        milestoneId: {
+          type: 'string',
+          description: 'Milestone ID',
+        },
+        limit: {
+          type: 'number',
+          description: 'Maximum number of history entries to return (optional)',
+        },
+        offset: {
+          type: 'number',
+          description: 'Number of entries to skip (optional)',
+        },
+      },
+      required: ['milestoneId'],
+    },
+  },
+  {
+    name: 'get_member_history',
+    description:
+      'Get history of changes for a specific member. Returns a list of all changes made to the member. Each history entry contains creatorId field - use get_space_members to get member details and display the author name (member.fullName) for each change. Always include the author information when presenting history to the user.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        memberId: {
+          type: 'string',
+          description: 'Member ID',
+        },
+        limit: {
+          type: 'number',
+          description: 'Maximum number of history entries to return (optional)',
+        },
+        offset: {
+          type: 'number',
+          description: 'Number of entries to skip (optional)',
+        },
+      },
+      required: ['memberId'],
+    },
+  },
+  {
+    name: 'get_space_history',
+    description:
+      'Get history of changes for a specific space. Returns a list of all changes made to the space. Each history entry contains creatorId field - use get_space_members to get member details and display the author name (member.fullName) for each change. Always include the author information when presenting history to the user.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        spaceId: {
+          type: 'string',
+          description: 'Space ID',
+        },
+        limit: {
+          type: 'number',
+          description: 'Maximum number of history entries to return (optional)',
+        },
+        offset: {
+          type: 'number',
+          description: 'Number of entries to skip (optional)',
+        },
+      },
+      required: ['spaceId'],
     },
   },
   {
@@ -1451,6 +1589,120 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const result = await vaizClient.getHistory({
           kind: args.kind as any,
           kindId: args.kindId as string,
+          limit: args.limit as number | undefined,
+          offset: args.offset as number | undefined,
+        });
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result, null, 2),
+            },
+          ],
+        };
+      }
+
+      case 'get_task_history': {
+        if (!args?.taskId) {
+          throw new Error('taskId is required');
+        }
+        const result = await vaizClient.getTaskHistory({
+          taskId: args.taskId as string,
+          limit: args.limit as number | undefined,
+          offset: args.offset as number | undefined,
+        });
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result, null, 2),
+            },
+          ],
+        };
+      }
+
+      case 'get_document_history': {
+        if (!args?.documentId) {
+          throw new Error('documentId is required');
+        }
+        const result = await vaizClient.getDocumentHistory({
+          documentId: args.documentId as string,
+          limit: args.limit as number | undefined,
+          offset: args.offset as number | undefined,
+        });
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result, null, 2),
+            },
+          ],
+        };
+      }
+
+      case 'get_project_history': {
+        if (!args?.projectId) {
+          throw new Error('projectId is required');
+        }
+        const result = await vaizClient.getProjectHistory({
+          projectId: args.projectId as string,
+          limit: args.limit as number | undefined,
+          offset: args.offset as number | undefined,
+        });
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result, null, 2),
+            },
+          ],
+        };
+      }
+
+      case 'get_milestone_history': {
+        if (!args?.milestoneId) {
+          throw new Error('milestoneId is required');
+        }
+        const result = await vaizClient.getMilestoneHistory({
+          milestoneId: args.milestoneId as string,
+          limit: args.limit as number | undefined,
+          offset: args.offset as number | undefined,
+        });
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result, null, 2),
+            },
+          ],
+        };
+      }
+
+      case 'get_member_history': {
+        if (!args?.memberId) {
+          throw new Error('memberId is required');
+        }
+        const result = await vaizClient.getMemberHistory({
+          memberId: args.memberId as string,
+          limit: args.limit as number | undefined,
+          offset: args.offset as number | undefined,
+        });
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result, null, 2),
+            },
+          ],
+        };
+      }
+
+      case 'get_space_history': {
+        if (!args?.spaceId) {
+          throw new Error('spaceId is required');
+        }
+        const result = await vaizClient.getSpaceHistory({
+          spaceId: args.spaceId as string,
           limit: args.limit as number | undefined,
           offset: args.offset as number | undefined,
         });

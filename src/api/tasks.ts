@@ -6,6 +6,8 @@ import {
   TaskUploadFile,
   GetHistoryRequest,
   GetHistoryResponse,
+  GetTaskHistoryRequest,
+  GetTaskHistoryResponse,
   GetTasksRequest,
   GetTasksResponse,
   TaskFile,
@@ -113,9 +115,23 @@ export class TasksAPIClient extends BaseAPIClient {
 
   /**
    * Get history for a task or other kind
+   * @deprecated Use getTaskHistory, getDocumentHistory, etc. instead
    */
   async getHistory(request: GetHistoryRequest): Promise<GetHistoryResponse> {
     const response = await this.makeRequest<GetHistoryResponse>('getHistory', 'POST', request);
+    return response;
+  }
+
+  /**
+   * Get history for a specific task
+   */
+  async getTaskHistory(request: GetTaskHistoryRequest): Promise<GetTaskHistoryResponse> {
+    const response = await this.makeRequest<GetTaskHistoryResponse>('getHistory', 'POST', {
+      kind: 'Task',
+      kindId: request.taskId,
+      limit: request.limit,
+      offset: request.offset,
+    });
     return response;
   }
 

@@ -89,3 +89,27 @@ export interface GetMilestoneResponse {
   milestone: Milestone;
 }
 
+/**
+ * Get milestone history request
+ */
+export interface GetMilestoneHistoryRequest {
+  milestoneId: string;
+  limit?: number;
+  offset?: number;
+}
+
+/**
+ * Get milestone history response
+ */
+export interface GetMilestoneHistoryResponse {
+  histories: Array<{
+    id: string;
+    kind: 'Milestone';
+    action: string;
+    userId: string;
+    createdAt: string;
+    changes?: Record<string, any>;
+  }>;
+  total: number;
+}
+
