@@ -54,7 +54,10 @@ export interface EditMilestoneRequest {
   milestoneId: string;
   name?: string;
   description?: string;
-  dueDate?: string;
+  dueStart?: string;
+  dueEnd?: string;
+  tags?: string[];
+  color?: string;
 }
 
 /**
@@ -68,15 +71,15 @@ export interface EditMilestoneResponse {
  * Toggle milestone request
  */
 export interface ToggleMilestoneRequest {
-  milestoneId: string;
-  completed: boolean;
+  taskId: string;
+  milestones: string[];
 }
 
 /**
  * Toggle milestone response
  */
 export interface ToggleMilestoneResponse {
-  milestone: Milestone;
+  task: any;
 }
 
 /**

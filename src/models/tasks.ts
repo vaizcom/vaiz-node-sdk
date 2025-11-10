@@ -1,4 +1,5 @@
-import { TaskPriority, TaskFollower, CustomField, Kind } from './base';
+import { TaskFollower, CustomField } from './base';
+import { Kind, TaskPriority } from './enums';
 
 /**
  * Task file attachment
@@ -23,6 +24,10 @@ export interface TaskUploadFile {
 
 /**
  * Create task request
+ *
+ * Note: The blockers/blocking fields are automatically transformed to leftConnectors/rightConnectors
+ * when sent to the Vaiz API. Use blockers for tasks that block this task, and blocking for tasks
+ * that this task blocks.
  */
 export interface CreateTaskRequest {
   name: string;
@@ -39,7 +44,9 @@ export interface CreateTaskRequest {
   milestones?: string[];
   dueStart?: string;
   dueEnd?: string;
+  /** Task IDs that block this task (automatically sent as leftConnectors to API) */
   blockers?: string[];
+  /** Task IDs that this task blocks (automatically sent as rightConnectors to API) */
   blocking?: string[];
   customFields?: CustomField[];
   files?: TaskFile[];
@@ -48,10 +55,15 @@ export interface CreateTaskRequest {
 
 /**
  * Edit task request
+ *
+ * Note: The blockers/blocking fields are automatically transformed to leftConnectors/rightConnectors
+ * when sent to the Vaiz API. Use blockers for tasks that block this task, and blocking for tasks
+ * that this task blocks.
  */
 export interface EditTaskRequest {
   taskId: string;
   name?: string;
+  group?: string;
   priority?: TaskPriority;
   completed?: boolean;
   assignees?: string[];
@@ -61,7 +73,9 @@ export interface EditTaskRequest {
   milestones?: string[];
   dueStart?: string;
   dueEnd?: string;
+  /** Task IDs that block this task (automatically sent as leftConnectors to API) */
   blockers?: string[];
+  /** Task IDs that this task blocks (automatically sent as rightConnectors to API) */
   blocking?: string[];
   customFields?: CustomField[];
   description?: string;

@@ -16,7 +16,7 @@ export class UploadAPIClient extends BaseAPIClient {
       throw new Error(`File not found: ${filePath}`);
     }
 
-    const response = await this.uploadFileInternal('upload', filePath, fileType);
+    const response = await this.uploadFileInternal('uploadFile', filePath, fileType);
     return response as UploadFileResponse;
   }
 
@@ -26,20 +26,20 @@ export class UploadAPIClient extends BaseAPIClient {
   async uploadFileFromUrl(url: string, fileType?: string): Promise<UploadFileResponse> {
     // Download file first
     const tempPath = `/tmp/vaiz-upload-${Date.now()}`;
-    
+
     try {
       const response = await axios.get(url, { responseType: 'stream' });
       const writer = createWriteStream(tempPath);
-      
+
       await pipeline(response.data, writer);
-      
+
       // Upload the downloaded file
       const uploadResponse = await this.uploadFile(tempPath, fileType);
-      
+
       // Clean up temp file
       const fs = await import('fs/promises');
       await fs.unlink(tempPath);
-      
+
       return uploadResponse;
     } catch (error: any) {
       // Try to clean up temp file if it exists
@@ -53,4 +53,3 @@ export class UploadAPIClient extends BaseAPIClient {
     }
   }
 }
-

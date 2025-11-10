@@ -1,4 +1,5 @@
-import { AvatarMode, ColorInfo } from './base';
+import { ColorInfo } from './base';
+import { AvatarMode } from './enums';
 
 /**
  * Member (space member)

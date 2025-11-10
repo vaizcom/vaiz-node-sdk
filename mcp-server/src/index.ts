@@ -7,7 +7,7 @@ import {
   ListToolsRequestSchema,
   Tool,
 } from '@modelcontextprotocol/sdk/types.js';
-import { VaizClient } from 'vaiz-sdk';
+import { VaizClient, Kind } from 'vaiz-sdk';
 import dotenv from 'dotenv';
 
 // Load environment variables
@@ -34,7 +34,7 @@ const tools: Tool[] = [
   {
     name: 'vaiz_get_tasks',
     description:
-      'Get a list of tasks from Vaiz with optional filtering. Returns tasks with their details including name, status, priority, assignees, and more. Supports filtering by IDs, board, project, assignees, completion status, and more.',
+      'Get a list of tasks from Vaiz with optional filtering. Returns tasks with their details including name, status, priority, assignees, and more. Supports filtering by IDs, board, project, assignees, completion status, and more. Results are cached for 5 minutes - use vaiz_clear_tasks_cache to force refresh.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -83,6 +83,15 @@ const tools: Tool[] = [
           description: 'Number of tasks to skip for pagination (default: 0)',
         },
       },
+    },
+  },
+  {
+    name: 'vaiz_clear_tasks_cache',
+    description:
+      'Clear the tasks cache. Use this when you need to force refresh task data after making changes (creating, editing, or deleting tasks). The cache is automatically cleared after 5 minutes, but this method allows immediate cache invalidation.',
+    inputSchema: {
+      type: 'object',
+      properties: {},
     },
   },
   {
@@ -171,15 +180,56 @@ const tools: Tool[] = [
         blockers: {
           type: 'array',
           items: { type: 'string' },
-          description: 'Task IDs that block this task',
+          description:
+            'DEPRECATED: Use leftConnectors instead. Task IDs that block this task. Note: The Vaiz API uses leftConnectors/rightConnectors, not blockers/blocking.',
         },
         blocking: {
           type: 'array',
           items: { type: 'string' },
-          description: 'Task IDs that this task blocks',
+          description:
+            'DEPRECATED: Use rightConnectors instead. Task IDs that this task blocks. Note: The Vaiz API uses leftConnectors/rightConnectors, not blockers/blocking.',
+        },
+        leftConnectors: {
+          type: 'array',
+          items: { type: 'string' },
+          description:
+            'Task IDs that block this task (blockers). Use this instead of blockers parameter.',
+        },
+        rightConnectors: {
+          type: 'array',
+          items: { type: 'string' },
+          description:
+            'Task IDs that this task blocks (blocking). Use this instead of blocking parameter.',
         },
       },
       required: ['name', 'board'],
+    },
+  },
+  {
+    name: 'vaiz_get_history',
+    description:
+      'Get history of changes for a task or other entity. Returns a list of all changes made to the entity. Each history entry contains creatorId field - use vaiz_get_space_members to get member details and display the author name (member.fullName) for each change. Always include the author information when presenting history to the user.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        kind: {
+          type: 'string',
+          description: 'Entity type (e.g., "Task", "Document", "Project")',
+        },
+        kindId: {
+          type: 'string',
+          description: 'Entity ID',
+        },
+        limit: {
+          type: 'number',
+          description: 'Maximum number of history entries to return (optional)',
+        },
+        offset: {
+          type: 'number',
+          description: 'Number of entries to skip (optional)',
+        },
+      },
+      required: ['kind', 'kindId'],
     },
   },
   {
@@ -196,6 +246,10 @@ const tools: Tool[] = [
         name: {
           type: 'string',
           description: 'New task name',
+        },
+        group: {
+          type: 'string',
+          description: 'New group ID (board column) to move the task to',
         },
         description: {
           type: 'string',
@@ -245,12 +299,26 @@ const tools: Tool[] = [
         blockers: {
           type: 'array',
           items: { type: 'string' },
-          description: 'New blocker task IDs',
+          description:
+            'DEPRECATED: Use leftConnectors instead. Task IDs that block this task. Note: The Vaiz API uses leftConnectors/rightConnectors, not blockers/blocking.',
         },
         blocking: {
           type: 'array',
           items: { type: 'string' },
-          description: 'New blocking task IDs',
+          description:
+            'DEPRECATED: Use rightConnectors instead. Task IDs that this task blocks. Note: The Vaiz API uses leftConnectors/rightConnectors, not blockers/blocking.',
+        },
+        leftConnectors: {
+          type: 'array',
+          items: { type: 'string' },
+          description:
+            'Task IDs that block this task (blockers). Use this instead of blockers parameter.',
+        },
+        rightConnectors: {
+          type: 'array',
+          items: { type: 'string' },
+          description:
+            'Task IDs that this task blocks (blocking). Use this instead of blocking parameter.',
         },
       },
       required: ['taskId'],
@@ -282,23 +350,21 @@ const tools: Tool[] = [
   {
     name: 'vaiz_get_documents',
     description:
-      'Get a list of documents with optional filtering. Returns documents with their metadata.',
+      'Get a list of documents filtered by scope (Space/Member/Project) and scope ID. Returns documents with their metadata.',
     inputSchema: {
       type: 'object',
       properties: {
-        projectId: {
+        kind: {
           type: 'string',
-          description: 'Filter documents by project ID (optional)',
+          description: 'Document scope: "Project", "Space", or "Member"',
+          enum: ['Project', 'Space', 'Member'],
         },
-        limit: {
-          type: 'number',
-          description: 'Maximum number of documents to return (optional)',
-        },
-        offset: {
-          type: 'number',
-          description: 'Offset for pagination (optional)',
+        kindId: {
+          type: 'string',
+          description: 'ID of the project/space/member',
         },
       },
+      required: ['kind', 'kindId'],
     },
   },
   {
@@ -321,26 +387,35 @@ const tools: Tool[] = [
     inputSchema: {
       type: 'object',
       properties: {
-        name: {
+        kind: {
           type: 'string',
-          description: 'Document name/title',
+          description: 'Document scope: "Project", "Space", or "Member"',
+          enum: ['Project', 'Space', 'Member'],
         },
-        projectId: {
+        kindId: {
           type: 'string',
-          description: 'Project ID where the document belongs',
+          description: 'ID of the project/space/member',
         },
-        content: {
+        title: {
           type: 'string',
-          description: 'Initial document content in HTML format (optional)',
+          description: 'Document title',
+        },
+        index: {
+          type: 'number',
+          description: 'Position in document list (use 0 for first position)',
+        },
+        parentDocumentId: {
+          type: 'string',
+          description: 'Optional parent document ID for nesting',
         },
       },
-      required: ['name', 'projectId'],
+      required: ['kind', 'kindId', 'title', 'index'],
     },
   },
   {
     name: 'vaiz_append_to_document',
     description:
-      'Append content to an existing document. The content will be added at the end of the document.',
+      'Append content to an existing document. The content will be added at the end of the document. IMPORTANT: For task descriptions (document attached to tasks), use vaiz_append_json_document instead, as this method does not work for task descriptions. Plain text/Markdown only - HTML is NOT supported.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -350,7 +425,7 @@ const tools: Tool[] = [
         },
         content: {
           type: 'string',
-          description: 'HTML content to append',
+          description: 'Plain text or Markdown content to append (HTML is NOT supported)',
         },
       },
       required: ['documentId', 'content'],
@@ -359,7 +434,7 @@ const tools: Tool[] = [
   {
     name: 'vaiz_replace_document',
     description:
-      'Replace the entire content of an existing document. Supports both HTML and Markdown formats.',
+      'Replace the entire content of an existing document. Plain text/Markdown only - HTML is NOT supported. For task descriptions, prefer vaiz_replace_json_document for better formatting and rich content support.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -369,7 +444,7 @@ const tools: Tool[] = [
         },
         content: {
           type: 'string',
-          description: 'HTML or Markdown content to replace with',
+          description: 'Plain text or Markdown content to replace with (HTML is NOT supported)',
         },
       },
       required: ['documentId', 'content'],
@@ -378,7 +453,7 @@ const tools: Tool[] = [
   {
     name: 'vaiz_replace_json_document',
     description:
-      'Replace document content with JSON structure. Use this for creating interactive checklists, tables, and other rich content. Requires proper document node structure.',
+      'Replace document content with JSON structure. Use this for creating interactive checklists, tables, and other rich content. RECOMMENDED for task descriptions and any document requiring rich formatting. Requires proper document node structure.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -390,6 +465,29 @@ const tools: Tool[] = [
           type: 'array',
           description:
             'Array of document nodes (heading, paragraph, taskList, etc.) in proper JSON structure',
+          items: {
+            type: 'object',
+          },
+        },
+      },
+      required: ['documentId', 'content'],
+    },
+  },
+  {
+    name: 'vaiz_append_json_document',
+    description:
+      'Append content to document using JSON structure. RECOMMENDED for task descriptions - use this instead of vaiz_append_to_document when working with task descriptions, as plain text append does not work for task documents. Supports rich formatting including links, bold text, lists, etc.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        documentId: {
+          type: 'string',
+          description: 'The document ID',
+        },
+        content: {
+          type: 'array',
+          description:
+            'Array of document nodes to append (heading, paragraph, taskList, etc.) in proper JSON structure',
           items: {
             type: 'object',
           },
@@ -426,7 +524,8 @@ const tools: Tool[] = [
         },
         content: {
           type: 'string',
-          description: 'Comment content (HTML supported)',
+          description:
+            'Comment content (HTML supported). To mention a user, use: <block-custom-mention-v2 custom="1" inline="true" data="{&quot;item&quot;:{&quot;id&quot;:&quot;USER_ID&quot;,&quot;kind&quot;:&quot;User&quot;}}"></block-custom-mention-v2>',
         },
         fileIds: {
           type: 'array',
@@ -467,7 +566,8 @@ const tools: Tool[] = [
         },
         content: {
           type: 'string',
-          description: 'New comment content (HTML supported)',
+          description:
+            'New comment content (HTML supported). To mention a user, use: <block-custom-mention-v2 custom="1" inline="true" data="{&quot;item&quot;:{&quot;id&quot;:&quot;USER_ID&quot;,&quot;kind&quot;:&quot;User&quot;}}"></block-custom-mention-v2>',
         },
         addFileIds: {
           type: 'array',
@@ -761,11 +861,47 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
       }
 
+      case 'vaiz_clear_tasks_cache': {
+        vaizClient.clearTasksCache();
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                { success: true, message: 'Tasks cache cleared successfully' },
+                null,
+                2
+              ),
+            },
+          ],
+        };
+      }
+
       case 'vaiz_get_task': {
         if (!args?.slug) {
           throw new Error('slug is required');
         }
         const result = await vaizClient.getTask(args.slug as string);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result, null, 2),
+            },
+          ],
+        };
+      }
+
+      case 'vaiz_get_history': {
+        if (!args?.kind || !args?.kindId) {
+          throw new Error('kind and kindId are required');
+        }
+        const result = await vaizClient.getHistory({
+          kind: args.kind as any,
+          kindId: args.kindId as string,
+          limit: args.limit as number | undefined,
+          offset: args.offset as number | undefined,
+        });
         return {
           content: [
             {
@@ -794,6 +930,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           priorityNum = priorityMap[args.priority as string] ?? 1;
         }
 
+        // Handle blockers: prefer leftConnectors/rightConnectors, fallback to blockers/blocking
+        const leftConnectors =
+          (args.leftConnectors as string[] | undefined) || (args.blockers as string[] | undefined);
+        const rightConnectors =
+          (args.rightConnectors as string[] | undefined) || (args.blocking as string[] | undefined);
+
         const result = await vaizClient.createTask({
           name: args.name as string,
           board: args.board as string,
@@ -809,8 +951,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           milestones: args.milestones as string[] | undefined,
           dueStart: args.dueStart as string | undefined,
           dueEnd: args.dueEnd as string | undefined,
-          blockers: args.blockers as string[] | undefined,
-          blocking: args.blocking as string[] | undefined,
+          blockers: leftConnectors,
+          blocking: rightConnectors,
         });
         return {
           content: [
@@ -840,9 +982,16 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           priorityNum = priorityMap[args.priority as string] ?? undefined;
         }
 
+        // Handle blockers: prefer leftConnectors/rightConnectors, fallback to blockers/blocking
+        const leftConnectors =
+          (args.leftConnectors as string[] | undefined) || (args.blockers as string[] | undefined);
+        const rightConnectors =
+          (args.rightConnectors as string[] | undefined) || (args.blocking as string[] | undefined);
+
         const result = await vaizClient.editTask({
           taskId: args.taskId as string,
           name: args.name as string | undefined,
+          group: args.group as string | undefined,
           description: args.description as string | undefined,
           priority: priorityNum as any,
           completed: args.completed as boolean | undefined,
@@ -853,8 +1002,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           milestones: args.milestones as string[] | undefined,
           dueStart: args.dueStart as string | undefined,
           dueEnd: args.dueEnd as string | undefined,
-          blockers: args.blockers as string[] | undefined,
-          blocking: args.blocking as string[] | undefined,
+          blockers: leftConnectors,
+          blocking: rightConnectors,
         });
         return {
           content: [
@@ -894,7 +1043,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case 'vaiz_get_documents': {
-        const result = await vaizClient.getDocuments(args || {});
+        if (!args?.kind || !args?.kindId) {
+          throw new Error('kind and kindId are required');
+        }
+        const result = await vaizClient.getDocuments({
+          kind: args.kind as Kind,
+          kindId: args.kindId as string,
+        });
         return {
           content: [
             {
@@ -921,12 +1076,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case 'vaiz_create_document': {
-        if (!args?.name || !args?.projectId) {
-          throw new Error('name and projectId are required');
+        if (!args?.kind || !args?.kindId || !args?.title || args?.index === undefined) {
+          throw new Error('kind, kindId, title, and index are required');
         }
         const result = await vaizClient.createDocument({
-          name: args.name as string,
-          projectId: args.projectId as string,
+          kind: args.kind as any,
+          kindId: args.kindId as string,
+          title: args.title as string,
+          index: args.index as number,
+          parentDocumentId: args.parentDocumentId as string | undefined,
         });
         return {
           content: [
@@ -979,6 +1137,24 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           throw new Error('documentId and content are required');
         }
         const result = await vaizClient.replaceJsonDocument({
+          documentId: args.documentId as string,
+          content: args.content as any[],
+        });
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result, null, 2),
+            },
+          ],
+        };
+      }
+
+      case 'vaiz_append_json_document': {
+        if (!args?.documentId || !args?.content) {
+          throw new Error('documentId and content are required');
+        }
+        const result = await vaizClient.appendJsonDocument({
           documentId: args.documentId as string,
           content: args.content as any[],
         });

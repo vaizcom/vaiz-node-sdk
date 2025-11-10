@@ -1,3 +1,5 @@
+import { Kind } from './enums';
+
 /**
  * Document
  */
@@ -16,10 +18,8 @@ export interface Document {
  * Get documents request
  */
 export interface GetDocumentsRequest {
-  projectId?: string;
-  parentId?: string;
-  limit?: number;
-  offset?: number;
+  kind: Kind;
+  kindId: string;
 }
 
 /**
@@ -34,10 +34,11 @@ export interface GetDocumentsResponse {
  * Create document request
  */
 export interface CreateDocumentRequest {
-  name: string;
-  projectId?: string;
-  parentId?: string;
-  description?: string;
+  kind: Kind;
+  kindId: string;
+  title: string;
+  index: number;
+  parentDocumentId?: string;
 }
 
 /**
@@ -138,4 +139,3 @@ export interface GetJSONDocumentRequest {
 export interface GetJSONDocumentResponse {
   content: any[];
 }
-

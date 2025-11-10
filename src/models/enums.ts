@@ -1,4 +1,36 @@
 /**
+ * Task priority levels
+ */
+export enum TaskPriority {
+  Low = 0,
+  General = 1,
+  Medium = 2,
+  High = 3,
+}
+
+/**
+ * Avatar mode
+ */
+export enum AvatarMode {
+  Initials = 0,
+  Upload = 1,
+  Avatar = 2,
+}
+
+/**
+ * Entity kind/type
+ */
+export enum Kind {
+  Task = 'Task',
+  Document = 'Document',
+  Milestone = 'Milestone',
+  User = 'User',
+  Project = 'Project',
+  Space = 'Space',
+  Member = 'Member',
+}
+
+/**
  * Custom field types
  */
 export enum CustomFieldType {
@@ -77,4 +109,3 @@ export const COMMENT_REACTION_METADATA = {
   [CommentReactionType.Sad]: { emoji: '😢', label: 'Sad' },
   [CommentReactionType.Angry]: { emoji: '😠', label: 'Angry' },
 };
-

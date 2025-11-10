@@ -7,35 +7,6 @@ export interface ColorInfo {
 }
 
 /**
- * Task priority levels
- */
-export enum TaskPriority {
-  Low = 0,
-  General = 1,
-  Medium = 2,
-  High = 3,
-}
-
-/**
- * Avatar mode
- */
-export enum AvatarMode {
-  Initials = 0,
-  Upload = 1,
-  Avatar = 2,
-}
-
-/**
- * Entity kind/type
- */
-export enum Kind {
-  Task = 'Task',
-  Document = 'Document',
-  Milestone = 'Milestone',
-  User = 'User',
-}
-
-/**
  * Task follower
  */
 export interface TaskFollower {
@@ -49,4 +20,3 @@ export interface CustomField {
   id: string;
   value: string | string[];
 }
-

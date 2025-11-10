@@ -26,7 +26,7 @@ export class MilestonesAPIClient extends BaseAPIClient {
    * Get a specific milestone by ID
    */
   async getMilestone(milestoneId: string): Promise<GetMilestoneResponse> {
-    const response = await this.makeRequest<GetMilestoneResponse>('getMilestone', 'POST', { milestoneId });
+    const response = await this.makeRequest<GetMilestoneResponse>('getMilestone', 'POST', { _id: milestoneId });
     return response;
   }
 
@@ -42,7 +42,8 @@ export class MilestonesAPIClient extends BaseAPIClient {
    * Edit an existing milestone
    */
   async editMilestone(request: EditMilestoneRequest): Promise<EditMilestoneResponse> {
-    const response = await this.makeRequest<EditMilestoneResponse>('editMilestone', 'POST', request);
+    const { milestoneId, ...rest } = request;
+    const response = await this.makeRequest<EditMilestoneResponse>('editMilestone', 'POST', { _id: milestoneId, ...rest });
     return response;
   }
 

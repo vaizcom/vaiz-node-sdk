@@ -67,7 +67,18 @@ export class TasksAPIClient extends BaseAPIClient {
       task.files.push(taskFile);
     }
 
-    const response = await this.makeRequest<TaskResponse>('createTask', 'POST', task);
+    // Transform blockers/blocking to leftConnectors/rightConnectors for API compatibility
+    const requestPayload: any = { ...task };
+    if (task.blockers !== undefined) {
+      requestPayload.leftConnectors = task.blockers;
+      delete requestPayload.blockers;
+    }
+    if (task.blocking !== undefined) {
+      requestPayload.rightConnectors = task.blocking;
+      delete requestPayload.blocking;
+    }
+
+    const response = await this.makeRequest<TaskResponse>('createTask', 'POST', requestPayload);
     return response;
   }
 
@@ -75,7 +86,18 @@ export class TasksAPIClient extends BaseAPIClient {
    * Edit an existing task
    */
   async editTask(task: EditTaskRequest): Promise<TaskResponse> {
-    const response = await this.makeRequest<TaskResponse>('editTask', 'POST', task);
+    // Transform blockers/blocking to leftConnectors/rightConnectors for API compatibility
+    const requestPayload: any = { ...task };
+    if (task.blockers !== undefined) {
+      requestPayload.leftConnectors = task.blockers;
+      delete requestPayload.blockers;
+    }
+    if (task.blocking !== undefined) {
+      requestPayload.rightConnectors = task.blocking;
+      delete requestPayload.blocking;
+    }
+
+    const response = await this.makeRequest<TaskResponse>('editTask', 'POST', requestPayload);
     return response;
   }
 

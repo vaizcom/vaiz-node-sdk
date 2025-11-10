@@ -1,4 +1,5 @@
-import { ColorInfo, AvatarMode } from './base';
+import { ColorInfo } from './base';
+import { AvatarMode } from './enums';
 
 /**
  * Space
