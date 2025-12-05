@@ -1,5 +1,5 @@
 {
-  "name": "vaiz-sdk",
+  "name": "@vaizapp/vaiz-sdk",
   "version": "0.18.0",
   "description": "Official Node.js SDK for the Vaiz API",
   "main": "dist/index.js",
@@ -55,4 +55,3 @@
     "node": ">=16.0.0"
   }
 }
-

@@ -2,12 +2,12 @@
 
 > Node.js/TypeScript SDK for the [Vaiz](https://vaiz.com) App
 
-[![npm version](https://badge.fury.io/js/vaiz-sdk.svg)](https://badge.fury.io/js/vaiz-sdk)
+[![npm version](https://badge.fury.io/js/%40vaizapp%2Fvaiz-sdk.svg)](https://badge.fury.io/js/%40vaizapp%2Fvaiz-sdk)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## About
 
-**Vaiz** is a modern project management app that helps teams collaborate and get work done. 
+**Vaiz** is a modern project management app that helps teams collaborate and get work done.
 This SDK provides a complete Node.js/TypeScript interface to the Vaiz API, making it easy to integrate Vaiz into your Node.js applications and workflows.
 
 ## Features
@@ -23,19 +23,19 @@ This SDK provides a complete Node.js/TypeScript interface to the Vaiz API, makin
 ## Installation
 
 ```bash
-npm install vaiz-sdk
+npm install @vaizapp/vaiz-sdk
 ```
 
 Or with yarn:
 
 ```bash
-yarn add vaiz-sdk
+yarn add @vaizapp/vaiz-sdk
 ```
 
 ## Quick Start
 
 ```typescript
-import { VaizClient, TaskPriority } from 'vaiz-sdk';
+import { VaizClient, TaskPriority } from '@vaizapp/vaiz-sdk';
 
 // Initialize the client
 const client = new VaizClient({
@@ -47,8 +47,8 @@ const client = new VaizClient({
 async function createTask() {
   const response = await client.createTask({
     name: 'Implement user authentication',
-    boardTypeId: 'board-type-id',
-    projectId: 'project-id',
+    board: 'board-id',
+    project: 'project-id',
     priority: TaskPriority.High,
   });
   
@@ -156,6 +156,7 @@ const spaceHistory = await client.getSpaceHistory({
 ```
 
 Each history response includes:
+
 - `histories`: Array of history items with `id`, `kind`, `action`, `userId`, `createdAt`, and `changes`
 - `total`: Total number of history entries
 
@@ -168,12 +169,16 @@ import {
   bulletList,
   codeBlock,
   text,
-} from 'vaiz-sdk';
+} from '@vaizapp/vaiz-sdk';
 
 // Create a document
+import { Kind } from '@vaizapp/vaiz-sdk';
+
 const doc = await client.createDocument({
-  name: 'API Documentation',
-  projectId: 'project-id',
+  kind: Kind.Project,
+  kindId: 'project-id',
+  title: 'API Documentation',
+  index: 0,
 });
 
 // Build structured content
@@ -204,7 +209,7 @@ import {
   makeTextField,
   Color,
   Icon,
-} from 'vaiz-sdk';
+} from '@vaizapp/vaiz-sdk';
 
 // Create a text field
 const textField = makeTextField(
@@ -247,8 +252,8 @@ const fromUrl = await client.uploadFileFromUrl(
 await client.createTask(
   {
     name: 'Review document',
-    boardTypeId: 'board-type-id',
-    projectId: 'project-id',
+    board: 'board-id',
+    project: 'project-id',
   },
   'Please review this document',
   { path: './document.pdf' }
@@ -258,25 +263,39 @@ await client.createTask(
 ### Comments
 
 ```typescript
-import { Kind } from 'vaiz-sdk';
+import { CommentReactionType } from '@vaizapp/vaiz-sdk';
 
-// Post a comment
+// Get task to find its description document ID
+const task = await client.getTask('TASK-123');
+// Note: Comments are attached to documents, not directly to tasks.
+// For task comments, you need to get the task's description document ID.
+// The document ID is typically available in the task's description field.
+
+// Post a comment to a document
 await client.postComment({
+  documentId: 'document-id',  // Document ID (e.g., task description document)
   content: 'Great work on this task!',
-  kind: Kind.Task,
-  kindId: 'task-id',
 });
 
-// Get comments
+// Get comments for a document
 const comments = await client.getComments({
-  kind: Kind.Task,
-  kindId: 'task-id',
+  documentId: 'document-id',
 });
 
-// React to a comment
+// Add a reaction to a comment (for popular emojis)
+await client.addReaction({
+  commentId: 'comment-id',
+  reaction: CommentReactionType.Like,
+});
+
+// React with custom emoji (advanced)
 await client.reactToComment({
   commentId: 'comment-id',
-  reactionType: CommentReactionType.Like,
+  id: 'heart',
+  name: 'Heart',
+  native: '❤️',
+  unified: '2764-fe0f',
+  shortcodes: ':heart:',
 });
 ```
 
@@ -287,7 +306,7 @@ The SDK provides comprehensive helpers for building document content:
 ### Text Formatting
 
 ```typescript
-import { text, paragraph, heading } from 'vaiz-sdk';
+import { text, paragraph, heading } from '@vaizapp/vaiz-sdk';
 
 // Basic text
 paragraph('Normal text');
@@ -304,7 +323,7 @@ paragraph(
 ### Lists
 
 ```typescript
-import { bulletList, orderedList, taskList, taskItem } from 'vaiz-sdk';
+import { bulletList, orderedList, taskList, taskItem } from '@vaizapp/vaiz-sdk';
 
 // Bullet list
 bulletList('Item 1', 'Item 2', 'Item 3');
@@ -322,7 +341,7 @@ taskList(
 ### Tables
 
 ```typescript
-import { table, tableRow, tableHeader, tableCell } from 'vaiz-sdk';
+import { table, tableRow, tableHeader, tableCell } from '@vaizapp/vaiz-sdk';
 
 table(
   tableRow(
@@ -338,7 +357,7 @@ table(
 ### Embeds
 
 ```typescript
-import { embedBlock, EmbedType } from 'vaiz-sdk';
+import { embedBlock, EmbedType } from '@vaizapp/vaiz-sdk';
 
 // YouTube video
 embedBlock(
@@ -367,7 +386,7 @@ import {
   VaizAuthError,
   VaizValidationError,
   VaizNotFoundError,
-} from 'vaiz-sdk';
+} from '@vaizapp/vaiz-sdk';
 
 try {
   await client.getTask('INVALID-SLUG');
