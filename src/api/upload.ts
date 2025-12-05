@@ -1,31 +1,100 @@
 import { BaseAPIClient } from './base';
-import { UploadFileResponse } from '../models';
+import { UploadFileResponse, UploadFileType } from '../models';
 import axios from 'axios';
 import { createWriteStream, existsSync } from 'fs';
 import { pipeline } from 'stream/promises';
+import { extname } from 'path';
 
 /**
  * Upload API Client
  */
 export class UploadAPIClient extends BaseAPIClient {
   /**
-   * Upload a file from local filesystem
+   * Detect file type from file path or MIME type
    */
-  async uploadFile(filePath: string, fileType?: string): Promise<UploadFileResponse> {
+  private detectFileType(filePath: string, mimeType?: string): UploadFileType {
+    const ext = extname(filePath).toLowerCase();
+
+    // Image extensions
+    if (['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'].includes(ext)) {
+      return UploadFileType.Image;
+    }
+
+    // Video extensions
+    if (['.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm', '.mkv'].includes(ext)) {
+      return UploadFileType.Video;
+    }
+
+    // PDF extension
+    if (ext === '.pdf') {
+      return UploadFileType.Pdf;
+    }
+
+    // Try to detect from MIME type
+    if (mimeType) {
+      if (mimeType.startsWith('image/')) {
+        return UploadFileType.Image;
+      }
+      if (mimeType.startsWith('video/')) {
+        return UploadFileType.Video;
+      }
+      if (mimeType === 'application/pdf') {
+        return UploadFileType.Pdf;
+      }
+    }
+
+    // Default to File
+    return UploadFileType.File;
+  }
+
+  /**
+   * Upload a file from local filesystem
+   * @param filePath - Path to the file to upload
+   * @param fileType - Optional file type (UploadFileType enum or MIME type string). If not provided, will be auto-detected.
+   */
+  async uploadFile(
+    filePath: string,
+    fileType?: UploadFileType | string
+  ): Promise<UploadFileResponse> {
     if (!existsSync(filePath)) {
       throw new Error(`File not found: ${filePath}`);
     }
 
-    const response = await this.uploadFileInternal('uploadFile', filePath, fileType);
+    // Convert MIME type string to UploadFileType enum if needed
+    let uploadFileType: UploadFileType;
+    if (!fileType) {
+      uploadFileType = this.detectFileType(filePath);
+    } else if (typeof fileType === 'string') {
+      // If it's already an UploadFileType value, use it directly
+      if (Object.values(UploadFileType).includes(fileType as UploadFileType)) {
+        uploadFileType = fileType as UploadFileType;
+      } else {
+        // Otherwise, treat it as MIME type and detect
+        uploadFileType = this.detectFileType(filePath, fileType);
+      }
+    } else {
+      uploadFileType = fileType;
+    }
+
+    const response = await this.uploadFileInternal('UploadFile', filePath, uploadFileType);
     return response as UploadFileResponse;
   }
 
   /**
    * Upload a file from URL
+   * @param url - URL of the file to download and upload
+   * @param fileType - Optional file type (UploadFileType enum or MIME type string). If not provided, will be auto-detected.
+   * @param filename - Optional custom filename for the uploaded file (reserved for future use)
    */
-  async uploadFileFromUrl(url: string, fileType?: string): Promise<UploadFileResponse> {
+  async uploadFileFromUrl(
+    url: string,
+    fileType?: UploadFileType | string,
+    filename?: string
+  ): Promise<UploadFileResponse> {
     // Download file first
-    const tempPath = `/tmp/vaiz-upload-${Date.now()}`;
+    // Note: filename parameter is reserved for future use
+    const _filename = filename; // Suppress unused parameter warning
+    const tempPath = `/tmp/vaiz-upload-${Date.now()}${_filename ? `-${_filename}` : ''}`;
 
     try {
       const response = await axios.get(url, { responseType: 'stream' });

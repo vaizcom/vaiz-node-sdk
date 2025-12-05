@@ -40,7 +40,25 @@ export class BoardsAPIClient extends BaseAPIClient {
    * Create a board type
    */
   async createBoardType(request: CreateBoardTypeRequest): Promise<CreateBoardTypeResponse> {
-    const response = await this.makeRequest<CreateBoardTypeResponse>('createBoardType', 'POST', request);
+    // Convert legacy "name" to "label" if provided
+    const cleanRequest: any = {
+      boardId: request.boardId,
+      label: request.label || request.name,
+      icon: request.icon,
+      color: request.color,
+    };
+
+    const response = await this.makeRequest<CreateBoardTypeResponse>(
+      'createBoardType',
+      'POST',
+      cleanRequest
+    );
+
+    // Add legacy alias for backward compatibility
+    if (response.payload?.boardType && !response.boardType) {
+      (response as any).boardType = response.payload.boardType;
+    }
+
     return response;
   }
 
@@ -48,7 +66,39 @@ export class BoardsAPIClient extends BaseAPIClient {
    * Edit a board type
    */
   async editBoardType(request: EditBoardTypeRequest): Promise<EditBoardTypeResponse> {
-    const response = await this.makeRequest<EditBoardTypeResponse>('editBoardType', 'POST', request);
+    // Convert legacy "name" to "label" if provided
+    const cleanRequest: any = {
+      boardTypeId: request.typeId,
+      boardId: request.boardId,
+    };
+
+    if (request.label !== undefined) {
+      cleanRequest.label = request.label;
+    } else if (request.name !== undefined) {
+      cleanRequest.label = request.name;
+    }
+
+    if (request.icon !== undefined) {
+      cleanRequest.icon = request.icon;
+    }
+
+    if (request.color !== undefined) {
+      cleanRequest.color = request.color;
+    }
+
+    if (request.description !== undefined) {
+      cleanRequest.description = request.description;
+    }
+
+    if (request.hidden !== undefined) {
+      cleanRequest.hidden = request.hidden;
+    }
+
+    const response = await this.makeRequest<EditBoardTypeResponse>(
+      'editBoardType',
+      'POST',
+      cleanRequest
+    );
     return response;
   }
 
@@ -56,7 +106,11 @@ export class BoardsAPIClient extends BaseAPIClient {
    * Create a board group
    */
   async createBoardGroup(request: CreateBoardGroupRequest): Promise<CreateBoardGroupResponse> {
-    const response = await this.makeRequest<CreateBoardGroupResponse>('createBoardGroup', 'POST', request);
+    const response = await this.makeRequest<CreateBoardGroupResponse>(
+      'createBoardGroup',
+      'POST',
+      request
+    );
     return response;
   }
 
@@ -64,24 +118,39 @@ export class BoardsAPIClient extends BaseAPIClient {
    * Edit a board group
    */
   async editBoardGroup(request: EditBoardGroupRequest): Promise<EditBoardGroupResponse> {
-    const response = await this.makeRequest<EditBoardGroupResponse>('editBoardGroup', 'POST', request);
+    const response = await this.makeRequest<EditBoardGroupResponse>(
+      'editBoardGroup',
+      'POST',
+      request
+    );
     return response;
   }
 
   /**
    * Create a board custom field
    */
-  async createBoardCustomField(request: CreateBoardCustomFieldRequest): Promise<CreateBoardCustomFieldResponse> {
-    const response = await this.makeRequest<CreateBoardCustomFieldResponse>('createBoardCustomField', 'POST', request);
+  async createBoardCustomField(
+    request: CreateBoardCustomFieldRequest
+  ): Promise<CreateBoardCustomFieldResponse> {
+    const response = await this.makeRequest<CreateBoardCustomFieldResponse>(
+      'createBoardCustomField',
+      'POST',
+      request
+    );
     return response;
   }
 
   /**
    * Edit a board custom field
    */
-  async editBoardCustomField(request: EditBoardCustomFieldRequest): Promise<EditBoardCustomFieldResponse> {
-    const response = await this.makeRequest<EditBoardCustomFieldResponse>('editBoardCustomField', 'POST', request);
+  async editBoardCustomField(
+    request: EditBoardCustomFieldRequest
+  ): Promise<EditBoardCustomFieldResponse> {
+    const response = await this.makeRequest<EditBoardCustomFieldResponse>(
+      'editBoardCustomField',
+      'POST',
+      request
+    );
     return response;
   }
 }
-

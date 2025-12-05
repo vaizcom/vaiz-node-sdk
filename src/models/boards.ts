@@ -1,13 +1,17 @@
-import { CustomFieldType } from './enums';
+import { CustomFieldType, Icon, Color } from './enums';
 
 /**
  * Board type
  */
 export interface BoardType {
   id: string;
-  name: string;
-  icon?: string;
-  color?: string;
+  label: string; // API uses "label", not "name"
+  icon: Icon; // Icon enum
+  color: Color | string; // Color enum value or string
+  description?: string;
+  hidden?: boolean;
+  // Legacy alias for backward compatibility
+  name?: string;
 }
 
 /**
@@ -62,17 +66,30 @@ export interface BoardsResponse {
  * Create board type request
  */
 export interface CreateBoardTypeRequest {
-  name: string;
+  label: string; // API uses "label", not "name"
   boardId: string;
-  icon?: string;
-  color?: string;
+  icon: Icon; // Required, must be Icon enum
+  color: Color; // Required, must be Color enum
+  // Legacy alias for backward compatibility (will be converted to label)
+  name?: string;
+}
+
+/**
+ * Create board type payload
+ */
+export interface CreateBoardTypePayload {
+  boardId: string;
+  boardType: BoardType;
 }
 
 /**
  * Create board type response
  */
 export interface CreateBoardTypeResponse {
-  type: BoardType;
+  type: string;
+  payload?: CreateBoardTypePayload;
+  // Legacy alias for backward compatibility
+  boardType?: BoardType;
 }
 
 /**
@@ -81,9 +98,13 @@ export interface CreateBoardTypeResponse {
 export interface EditBoardTypeRequest {
   typeId: string;
   boardId: string;
+  label?: string; // API uses "label", not "name"
+  icon?: Icon; // Must be Icon enum if provided
+  color?: Color; // Must be Color enum if provided
+  description?: string;
+  hidden?: boolean;
+  // Legacy alias for backward compatibility (will be converted to label)
   name?: string;
-  icon?: string;
-  color?: string;
 }
 
 /**

@@ -249,7 +249,9 @@ export class BaseAPIClient {
 
       if (axios.isAxiosError(error)) {
         // Include response data for debugging
-        const errorDetails = error.response?.data ? JSON.stringify(error.response.data) : error.message;
+        const errorDetails = error.response?.data
+          ? JSON.stringify(error.response.data)
+          : error.message;
         throw new VaizSDKError(`Network error for ${url}: ${errorDetails}`);
       }
 
@@ -270,7 +272,8 @@ export class BaseAPIClient {
       formData.append('file', createReadStream(filePath));
 
       if (fileType) {
-        formData.append('type', fileType);
+        // If fileType is an enum value, use it directly, otherwise use as string
+        formData.append('type', typeof fileType === 'string' ? fileType : String(fileType));
       }
 
       const response = await this.session.post(endpoint, formData, {

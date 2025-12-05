@@ -12,6 +12,7 @@ import {
   ReactToCommentRequest,
   ReactToCommentResponse,
 } from '../models';
+import { COMMENT_REACTION_METADATA } from '../models/enums';
 
 /**
  * Comments API Client
@@ -27,12 +28,16 @@ export class CommentsAPIClient extends BaseAPIClient {
       content: request.content,
       fileIds: request.fileIds || [],
     };
-    
+
     if (request.replyTo !== undefined) {
       cleanRequest.replyTo = request.replyTo;
     }
-    
-    const response = await this.makeRequest<PostCommentResponse>('postComment', 'POST', cleanRequest);
+
+    const response = await this.makeRequest<PostCommentResponse>(
+      'postComment',
+      'POST',
+      cleanRequest
+    );
     return response;
   }
 
@@ -56,7 +61,11 @@ export class CommentsAPIClient extends BaseAPIClient {
    * Soft delete a comment
    */
   async deleteComment(request: DeleteCommentRequest): Promise<DeleteCommentResponse> {
-    const response = await this.makeRequest<DeleteCommentResponse>('deleteComment', 'POST', request);
+    const response = await this.makeRequest<DeleteCommentResponse>(
+      'deleteComment',
+      'POST',
+      request
+    );
     return response;
   }
 
@@ -64,21 +73,12 @@ export class CommentsAPIClient extends BaseAPIClient {
    * Add a popular emoji reaction (simplified method)
    */
   async addReaction(request: AddReactionRequest): Promise<ReactToCommentResponse> {
-    // Map popular reaction types to emoji data
-    const reactionMap: Record<string, any> = {
-      'THUMBS_UP': { id: '+1', name: 'Thumbs Up', native: '👍', unified: '1f44d', shortcodes: ':+1:' },
-      'HEART': { id: 'heart', name: 'Heart', native: '❤️', unified: '2764-fe0f', shortcodes: ':heart:' },
-      'LAUGH': { id: 'laughing', name: 'Laughing', native: '😆', unified: '1f606', shortcodes: ':laughing:' },
-      'SAD': { id: 'disappointed', name: 'Disappointed', native: '😞', unified: '1f61e', shortcodes: ':disappointed:' },
-      'SURPRISED': { id: 'open_mouth', name: 'Open Mouth', native: '😮', unified: '1f62e', shortcodes: ':open_mouth:' },
-      'ANGRY': { id: 'angry', name: 'Angry', native: '😠', unified: '1f620', shortcodes: ':angry:' },
-    };
-    
-    const emojiData = reactionMap[request.reaction];
+    // Get emoji data from metadata
+    const emojiData = COMMENT_REACTION_METADATA[request.reaction];
     if (!emojiData) {
       throw new Error(`Unknown reaction type: ${request.reaction}`);
     }
-    
+
     const reactRequest = {
       commentId: request.commentId,
       id: emojiData.id,
@@ -87,8 +87,12 @@ export class CommentsAPIClient extends BaseAPIClient {
       unified: emojiData.unified,
       shortcodes: emojiData.shortcodes,
     };
-    
-    const response = await this.makeRequest<ReactToCommentResponse>('reactToComment', 'POST', reactRequest);
+
+    const response = await this.makeRequest<ReactToCommentResponse>(
+      'reactToComment',
+      'POST',
+      reactRequest
+    );
     return response;
   }
 
@@ -96,8 +100,11 @@ export class CommentsAPIClient extends BaseAPIClient {
    * React to a comment with custom emoji
    */
   async reactToComment(request: ReactToCommentRequest): Promise<ReactToCommentResponse> {
-    const response = await this.makeRequest<ReactToCommentResponse>('reactToComment', 'POST', request);
+    const response = await this.makeRequest<ReactToCommentResponse>(
+      'reactToComment',
+      'POST',
+      request
+    );
     return response;
   }
 }
-
